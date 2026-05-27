@@ -36,10 +36,19 @@ jobs:
       - name: Build mac artifacts (dmg + zip)
         run: npm run dist:mac -- --${{ matrix.arch }} --publish never
 
+      - name: Normalize artifact names
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ matrix.arch }}" = "x64" ]; then
+            mv "dist/NewJeans Pets-1.0.0.dmg" "dist/NewJeans Pets-1.0.0-x64.dmg"
+            mv "dist/NewJeans Pets-1.0.0-mac.zip" "dist/NewJeans Pets-1.0.0-x64-mac.zip"
+          fi
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: NewJeans-Pets-mac-${{ matrix.arch }}
           path: |
-            dist/*${{ matrix.arch }}*.dmg
-            dist/*${{ matrix.arch }}*.zip
+            dist/*-${{ matrix.arch }}.dmg
+            dist/*-${{ matrix.arch }}-mac.zip
