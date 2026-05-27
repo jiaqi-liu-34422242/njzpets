@@ -9,6 +9,12 @@ on:
 jobs:
   mac:
     runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch:
+          - arm64
+          - x64
     env:
       # Opt-in early so JS-based actions don't run on deprecated Node 20.
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
@@ -28,12 +34,12 @@ jobs:
         run: npm ci
 
       - name: Build mac artifacts (dmg + zip)
-        run: npm run dist:mac
+        run: npm run dist:mac -- --${{ matrix.arch }} --publish never
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: NewJeans-Pets-mac
+          name: NewJeans-Pets-mac-${{ matrix.arch }}
           path: |
-            dist/*.dmg
-            dist/*.zip
+            dist/*${{ matrix.arch }}*.dmg
+            dist/*${{ matrix.arch }}*.zip
