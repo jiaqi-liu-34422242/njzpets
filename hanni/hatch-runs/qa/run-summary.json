@@ -1,0 +1,10 @@
+{
+  "ok": true,
+  "run_dir": "D:\\njzpets\\hanni\\hatch-runs",
+  "spritesheet": "D:\\njzpets\\hanni\\hatch-runs\\final\\spritesheet.webp",
+  "validation": "D:\\njzpets\\hanni\\hatch-runs\\final\\validation.json",
+  "contact_sheet": "D:\\njzpets\\hanni\\hatch-runs\\qa\\contact-sheet.png",
+  "review": "D:\\njzpets\\hanni\\hatch-runs\\qa\\review.json",
+  "videos": "D:\\njzpets\\hanni\\hatch-runs\\qa\\videos",
+  "package": "C:\\Users\\24340\\.codex\\pets\\hanni"
+}

@@ -1,0 +1,24 @@
+{
+  "ok": true,
+  "chroma_key": {
+    "hex": "#00FF00",
+    "rgb": [
+      0,
+      255,
+      0
+    ],
+    "threshold": 96.0
+  },
+  "rows": [
+    {
+      "state": "waving",
+      "frames": [
+        "D:\\njzpets\\minji\\hatch-runs\\tmp-slots\\waving\\00.png",
+        "D:\\njzpets\\minji\\hatch-runs\\tmp-slots\\waving\\01.png",
+        "D:\\njzpets\\minji\\hatch-runs\\tmp-slots\\waving\\02.png",
+        "D:\\njzpets\\minji\\hatch-runs\\tmp-slots\\waving\\03.png"
+      ],
+      "method": "slots"
+    }
+  ]
+}

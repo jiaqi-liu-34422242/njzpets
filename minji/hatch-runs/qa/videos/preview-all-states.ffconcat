@@ -1,0 +1,10 @@
+ffconcat version 1.0
+file 'D:\njzpets\minji\hatch-runs\qa\videos\idle.mp4'
+file 'D:\njzpets\minji\hatch-runs\qa\videos\running-right.mp4'
+file 'D:\njzpets\minji\hatch-runs\qa\videos\running-left.mp4'
+file 'D:\njzpets\minji\hatch-runs\qa\videos\waving.mp4'
+file 'D:\njzpets\minji\hatch-runs\qa\videos\jumping.mp4'
+file 'D:\njzpets\minji\hatch-runs\qa\videos\failed.mp4'
+file 'D:\njzpets\minji\hatch-runs\qa\videos\waiting.mp4'
+file 'D:\njzpets\minji\hatch-runs\qa\videos\running.mp4'
+file 'D:\njzpets\minji\hatch-runs\qa\videos\review.mp4'
