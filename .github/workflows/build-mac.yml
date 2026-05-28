@@ -40,9 +40,39 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [ "${{ matrix.arch }}" = "x64" ]; then
-            mv "dist/NewJeans Pets-1.0.0.dmg" "dist/NewJeans Pets-1.0.0-x64.dmg"
-            mv "dist/NewJeans Pets-1.0.0-mac.zip" "dist/NewJeans Pets-1.0.0-x64-mac.zip"
+          ARCH="${{ matrix.arch }}"
+
+          pick_file() {
+            local arch="$1"; shift
+            local -a files=("$@")
+            if [ "${#files[@]}" -eq 0 ]; then
+              return 1
+            fi
+            for f in "${files[@]}"; do
+              if [[ "$f" == *"$arch"* ]]; then
+                printf '%s\n' "$f"
+                return 0
+              fi
+            done
+            printf '%s\n' "${files[0]}"
+          }
+
+          # DMG: electron-builder naming differs by arch/version; normalize to include "-$ARCH".
+          mapfile -t dmgs < <(ls -1 dist/*.dmg 2>/dev/null | grep -v '\.dmg\.blockmap$' || true)
+          if [ "${#dmgs[@]}" -gt 0 ]; then
+            src_dmg="$(pick_file "$ARCH" "${dmgs[@]}")"
+            if [[ "$src_dmg" != *-"$ARCH".dmg ]]; then
+              mv "$src_dmg" "${src_dmg%.dmg}-$ARCH.dmg"
+            fi
+          fi
+
+          # ZIP: normalize to include "-$ARCH" before "-mac.zip".
+          mapfile -t zips < <(ls -1 dist/*-mac.zip 2>/dev/null | grep -v '\.zip\.blockmap$' || true)
+          if [ "${#zips[@]}" -gt 0 ]; then
+            src_zip="$(pick_file "$ARCH" "${zips[@]}")"
+            if [[ "$src_zip" != *-"$ARCH"-mac.zip ]]; then
+              mv "$src_zip" "${src_zip%-mac.zip}-$ARCH-mac.zip"
+            fi
           fi
 
       - name: Upload artifacts
