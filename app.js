@@ -46,7 +46,7 @@ const state = {
   actionStartedAt: performance.now(),
   controlsOpen: false,
   controlsHoverOpen: false,
-  companionMode: window.localStorage.getItem("desktopPetCompanionMode") === "true",
+  companionMode: false,
   bubbleEditorOpen: false,
   bubbleDraftLines: [],
   selectedBubbleLineIndex: 0,
@@ -55,7 +55,9 @@ const state = {
     alwaysOnTop: true,
     openAtLogin: true,
     bubbleEnabled: true,
-    selectedPetId: pets[0].id
+    petId: pets[0].id,
+    activePetIds: [pets[0].id],
+    hideDockIcon: false
   },
   petScale: Number(window.localStorage.getItem("desktopPetScale") || "1")
 };
@@ -73,7 +75,7 @@ const pinButton = document.querySelector("#pinButton");
 const hideButton = document.querySelector("#hideButton");
 const quitButton = document.querySelector("#quitButton");
 const talkButton = document.querySelector("#talkButton");
-const nextPetButton = document.querySelector("#nextPetButton");
+const closePetButton = document.querySelector("#closePetButton");
 const bubbleToggleButton = document.querySelector("#bubbleToggleButton");
 const companionButton = document.querySelector("#companionButton");
 const idleButton = document.querySelector("#idleButton");
@@ -124,11 +126,11 @@ function getBubbleLinesForPet(pet) {
   return pet.bubbleText;
 }
 
-function setPetScale(nextScale) {
+function setPetScale(nextScale, options = {}) {
   state.petScale = Math.min(1, Math.max(0.35, nextScale));
   document.documentElement.style.setProperty("--pet-scale", String(state.petScale));
   window.localStorage.setItem("desktopPetScale", String(state.petScale));
-  if (window.desktopPetShell) {
+  if (options.syncShell !== false && window.desktopPetShell) {
     window.desktopPetShell.setPetScale(state.petScale);
   }
   updateScaleButtonLabel();
@@ -259,12 +261,7 @@ function scheduleBubbleRotation() {
   }, 7000);
 }
 
-async function syncSelectedPet(petId) {
-  if (!window.desktopPetShell) return;
-  await window.desktopPetShell.selectPet(petId);
-}
-
-function selectPet(petId, options = {}) {
+function selectPet(petId) {
   const nextPet = pets.find((pet) => pet.id === petId);
   if (!nextPet || !nextPet.ready) return;
 
@@ -273,17 +270,6 @@ function selectPet(petId, options = {}) {
   setAction(DEFAULT_ACTION);
   render();
   scheduleBubbleRotation();
-
-  if (options.syncShell !== false) {
-    syncSelectedPet(petId);
-  }
-}
-
-function selectNextPet() {
-  const readyPets = pets.filter((pet) => pet.ready);
-  const index = readyPets.findIndex((pet) => pet.id === state.selectedPet.id);
-  const next = readyPets[(index + 1) % readyPets.length];
-  selectPet(next.id);
 }
 
 function normalizeBubbleLines(lines) {
@@ -436,7 +422,6 @@ function renderActionButtons() {
 
 function setCompanionMode(enabled) {
   state.companionMode = Boolean(enabled);
-  window.localStorage.setItem("desktopPetCompanionMode", String(state.companionMode));
   if (state.companionMode) {
     state.controlsOpen = false;
     state.controlsHoverOpen = false;
@@ -516,8 +501,9 @@ talkButton.addEventListener("click", () => {
   activateAction("waving", { quiet: true });
 });
 
-nextPetButton.addEventListener("click", () => {
-  selectNextPet();
+closePetButton.addEventListener("click", async () => {
+  if (!window.desktopPetShell) return;
+  await window.desktopPetShell.closeCurrentPet();
 });
 
 idleButton.addEventListener("click", () => {
@@ -740,7 +726,6 @@ window.addEventListener("keydown", (event) => {
 });
 
 if (window.desktopPetShell) {
-  window.desktopPetShell.setCompanionMode(state.companionMode);
   window.desktopPetShell.setBubbleEditorOpen(false);
 
   bubbleToggleButton.addEventListener("click", async () => {
@@ -771,22 +756,28 @@ if (window.desktopPetShell) {
 
   window.desktopPetShell.getSettings().then((settings) => {
     state.shellSettings = { ...state.shellSettings, ...settings };
-    if (!state.shellSettings.bubbleEnabled) {
-      state.shellSettings.bubbleEnabled = true;
-      window.desktopPetShell.setBubbleEnabled(true);
+    state.companionMode = Boolean(settings.companionMode);
+    if (typeof settings.petScale === "number") {
+      setPetScale(settings.petScale, { syncShell: false });
     }
-    selectPet(state.shellSettings.selectedPetId || pets[0].id, { syncShell: false });
+    selectPet(state.shellSettings.petId || pets[0].id);
     renderShellControls();
     scheduleBubbleRotation();
   });
 
   window.desktopPetShell.onSettings((settings) => {
     state.shellSettings = { ...state.shellSettings, ...settings };
+    if (typeof settings.companionMode === "boolean") {
+      state.companionMode = settings.companionMode;
+    }
+    if (typeof settings.petScale === "number" && Math.abs(settings.petScale - state.petScale) > 0.001) {
+      setPetScale(settings.petScale, { syncShell: false });
+    }
+    if (settings.petId && settings.petId !== state.selectedPet.id) {
+      selectPet(settings.petId);
+      return;
+    }
     renderShellControls();
-  });
-
-  window.desktopPetShell.onPetSelected(({ petId }) => {
-    selectPet(petId, { syncShell: false });
   });
 
   window.desktopPetShell.onBubblesEnabled((enabled) => {
@@ -797,7 +788,7 @@ if (window.desktopPetShell) {
 }
 
 render();
-setPetScale(state.petScale);
+setPetScale(state.petScale, { syncShell: false });
 setAction(DEFAULT_ACTION);
 scheduleBubbleRotation();
 window.requestAnimationFrame(animatePet);

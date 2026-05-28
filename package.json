@@ -1,6 +1,6 @@
 {
   "name": "newjeans-pets",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "Electron desktop pet shell wired to five finalized NewJeans pet atlases.",
   "main": "main.js",
@@ -30,11 +30,11 @@
       "pet-data.js",
       "preload.js",
       "styles.css",
-      "minji/**/*",
-      "hanni/**/*",
-      "daniel/**/*",
-      "haerin/**/*",
-      "hyein/**/*"
+      "minji/hatch-runs/final/spritesheet.webp",
+      "hanni/hatch-runs/final/spritesheet.webp",
+      "daniel/hatch-runs/final/spritesheet.webp",
+      "haerin/hatch-runs/final/spritesheet.webp",
+      "hyein/hatch-runs/final/spritesheet.webp"
     ],
     "extraResources": [
       {
