@@ -7,11 +7,11 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron .",
-    "dist:win": "electron-builder --win nsis portable",
+    "dist:win": "electron-builder --win --x64 --publish never",
     "dist:mac": "electron-builder --mac dmg zip"
   },
   "devDependencies": {
-    "electron": "^37.10.3",
+    "electron": "22.3.27",
     "electron-builder": "^26.0.12"
   },
   "build": {
@@ -65,7 +65,11 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
+      "createStartMenuShortcut": true,
+      "artifactName": "NewJeans-Pets-win7-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "NewJeans-Pets-win7-${version}.${ext}"
     }
   }
 }

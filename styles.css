@@ -94,8 +94,8 @@ button {
 }
 
 .shell-button.active {
-  border-color: color-mix(in srgb, var(--pet-secondary) 72%, #a96f31);
-  background: color-mix(in srgb, var(--pet-secondary) 18%, white);
+  border-color: #e29543;
+  background: #fdf0df;
 }
 
 .shell-button-danger {
@@ -134,7 +134,7 @@ button {
   min-width: 96px;
   max-width: min(280px, calc(100vw - 18px));
   min-height: 36px;
-  max-height: calc(2lh + 16px);
+  max-height: calc(2.56em + 16px);
   transform: translateX(-50%);
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -174,7 +174,7 @@ body.bubbles-off .bubble {
 }
 
 .pet-button:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--pet-accent) 70%, white);
+  outline: 3px solid #d5edf5;
   outline-offset: 8px;
 }
 
@@ -367,8 +367,8 @@ body.dragging-pet .pet-canvas {
 }
 
 .bubble-line-item.selected {
-  border-color: color-mix(in srgb, var(--pet-secondary) 64%, #a96f31);
-  background: color-mix(in srgb, var(--pet-secondary) 14%, white);
+  border-color: #e08f3d;
+  background: #fdf4e7;
 }
 
 .bubble-line-empty {
@@ -452,8 +452,8 @@ body.dragging-pet .pet-canvas {
 }
 
 .action-button.active {
-  border-color: color-mix(in srgb, var(--pet-secondary) 72%, #a96f31);
-  background: color-mix(in srgb, var(--pet-secondary) 18%, white);
+  border-color: #e29543;
+  background: #fdf0df;
 }
 
 .identity-chip strong,
