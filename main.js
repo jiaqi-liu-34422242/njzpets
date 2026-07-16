@@ -235,6 +235,16 @@ function listActivePetIds() {
   return currentState.petWindows.map((entry) => entry.petId);
 }
 
+function getPrimaryPetId() {
+  return currentState.petWindows[0]?.petId || PET_OPTIONS[0].id;
+}
+
+function getNextPetId() {
+  const currentIndex = PET_OPTIONS.findIndex((pet) => pet.id === getPrimaryPetId());
+  const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % PET_OPTIONS.length;
+  return PET_OPTIONS[nextIndex].id;
+}
+
 function sendShellSettings(window) {
   if (!window || window.isDestroyed()) return;
   const petState = ensurePetWindowState(window.petId);
@@ -490,6 +500,91 @@ function resetAllPetPositions() {
   }
 }
 
+function getSwitchSourceState() {
+  const focusedWindow = BrowserWindow.getFocusedWindow();
+  const sourceWindow = focusedWindow?.petId ? focusedWindow : Array.from(petWindows.values()).find((window) => {
+    return !window.isDestroyed() && window.isVisible();
+  });
+
+  if (sourceWindow?.petId) {
+    syncBoundsIntoState(sourceWindow);
+    return getPetWindowState(sourceWindow.petId);
+  }
+
+  return currentState.petWindows[0] || defaultPetWindowState(PET_OPTIONS[0].id);
+}
+
+function switchPetOnDesktop(petId) {
+  if (!PET_ID_SET.has(petId)) return;
+
+  const sourceState = getSwitchSourceState();
+  const existingTargetState = getPetWindowState(petId);
+  const nextPetState = {
+    ...defaultPetWindowState(petId),
+    ...(existingTargetState || {}),
+    petId,
+    bubbleEditorOpen: false
+  };
+
+  if (sourceState && sourceState.petId !== petId) {
+    if (typeof sourceState.x === "number") nextPetState.x = sourceState.x;
+    if (typeof sourceState.y === "number") nextPetState.y = sourceState.y;
+    nextPetState.companionMode = Boolean(sourceState.companionMode);
+  }
+
+  const previousPetIds = listActivePetIds();
+  currentState.petWindows = [nextPetState];
+  writeWindowState();
+
+  for (const previousPetId of previousPetIds) {
+    if (previousPetId === petId) continue;
+    const window = petWindows.get(previousPetId);
+    if (!window || window.isDestroyed()) continue;
+
+    closingPets.add(previousPetId);
+    stopWindowDrag(window);
+    window.close();
+    petWindows.delete(previousPetId);
+  }
+
+  const window = showPetWindow(petId);
+  window.setAlwaysOnTop(currentState.alwaysOnTop, "screen-saver");
+  applyWindowSizeForPet(window, "center");
+  if (typeof nextPetState.x === "number" && typeof nextPetState.y === "number") {
+    const bounds = window.getBounds();
+    window.setBounds(clampBoundsToWorkArea({
+      ...bounds,
+      x: nextPetState.x,
+      y: nextPetState.y
+    }));
+    writeWindowStateForWindow(window);
+  }
+  refreshTrayMenu();
+  broadcastSettings();
+}
+
+function switchToNextPetOnDesktop() {
+  switchPetOnDesktop(getNextPetId());
+}
+
+function addAllPetsToDesktop() {
+  for (const pet of PET_OPTIONS) {
+    if (!getPetWindowState(pet.id)) {
+      currentState.petWindows.push(defaultPetWindowState(pet.id));
+    }
+  }
+
+  writeWindowState();
+
+  for (const petId of listActivePetIds()) {
+    const window = showPetWindow(petId);
+    window.setAlwaysOnTop(currentState.alwaysOnTop, "screen-saver");
+  }
+
+  refreshTrayMenu();
+  broadcastSettings();
+}
+
 function addPetToDesktop(petId) {
   if (!PET_ID_SET.has(petId)) return;
   if (!getPetWindowState(petId)) {
@@ -522,6 +617,13 @@ function removePetFromDesktop(petId) {
 function refreshTrayMenu() {
   if (!tray) return;
 
+  const switchPetSubmenu = PET_OPTIONS.map((pet) => ({
+    label: pet.label,
+    type: "radio",
+    checked: getPrimaryPetId() === pet.id,
+    click: () => switchPetOnDesktop(pet.id)
+  }));
+
   const petSubmenu = PET_OPTIONS.map((pet) => ({
     label: pet.label,
     type: "checkbox",
@@ -542,6 +644,8 @@ function refreshTrayMenu() {
     },
     { label: "Hide All Pets", click: () => hideAllPets() },
     { type: "separator" },
+    { label: "切换下一个桌宠", click: () => switchToNextPetOnDesktop() },
+    { label: "切换桌宠", submenu: switchPetSubmenu },
     { label: "Pets On Desktop", submenu: petSubmenu },
     {
       label: "Show Bubbles",
@@ -733,6 +837,16 @@ ipcMain.handle("shell:close-current-pet", (event) => {
     removePetFromDesktop(window.petId);
   }
   return { ok: true };
+});
+
+ipcMain.handle("shell:switch-to-next-pet", () => {
+  switchToNextPetOnDesktop();
+  return { petId: getPrimaryPetId(), activePetIds: listActivePetIds() };
+});
+
+ipcMain.handle("shell:show-all-pets", () => {
+  addAllPetsToDesktop();
+  return { activePetIds: listActivePetIds() };
 });
 
 ipcMain.handle("shell:quit", () => {

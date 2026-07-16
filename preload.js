@@ -4,6 +4,8 @@ contextBridge.exposeInMainWorld("desktopPetShell", {
   toggleAlwaysOnTop: () => ipcRenderer.invoke("shell:toggle-always-on-top"),
   hideWindow: () => ipcRenderer.invoke("shell:hide-window"),
   closeCurrentPet: () => ipcRenderer.invoke("shell:close-current-pet"),
+  switchToNextPet: () => ipcRenderer.invoke("shell:switch-to-next-pet"),
+  showAllPets: () => ipcRenderer.invoke("shell:show-all-pets"),
   quit: () => ipcRenderer.invoke("shell:quit"),
   getSettings: () => ipcRenderer.invoke("shell:get-settings"),
   setBubbleEnabled: (enabled) => ipcRenderer.invoke("shell:set-bubble-enabled", enabled),

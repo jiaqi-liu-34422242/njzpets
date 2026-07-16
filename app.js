@@ -75,6 +75,8 @@ const pinButton = document.querySelector("#pinButton");
 const hideButton = document.querySelector("#hideButton");
 const quitButton = document.querySelector("#quitButton");
 const talkButton = document.querySelector("#talkButton");
+const switchPetButton = document.querySelector("#switchPetButton");
+const showAllPetsButton = document.querySelector("#showAllPetsButton");
 const closePetButton = document.querySelector("#closePetButton");
 const bubbleToggleButton = document.querySelector("#bubbleToggleButton");
 const companionButton = document.querySelector("#companionButton");
@@ -505,6 +507,16 @@ actionButtons.forEach((button) => {
 talkButton.addEventListener("click", () => {
   cycleBubble(1);
   activateAction("waving", { quiet: true });
+});
+
+switchPetButton.addEventListener("click", async () => {
+  if (!window.desktopPetShell) return;
+  await window.desktopPetShell.switchToNextPet();
+});
+
+showAllPetsButton.addEventListener("click", async () => {
+  if (!window.desktopPetShell) return;
+  await window.desktopPetShell.showAllPets();
 });
 
 closePetButton.addEventListener("click", async () => {
