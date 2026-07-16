@@ -64,7 +64,8 @@ function defaultState() {
   return {
     alwaysOnTop: true,
     openAtLogin: true,
-    bubbleEnabled: true,
+    bubbleEnabled: false,
+    bubblePreferenceSet: false,
     petScale: 1,
     hideDockIcon: false,
     petWindows: [defaultPetWindowState("minji")]
@@ -117,7 +118,8 @@ function normalizeState(savedState) {
     ...base,
     alwaysOnTop: savedState.alwaysOnTop === undefined ? base.alwaysOnTop : Boolean(savedState.alwaysOnTop),
     openAtLogin: savedState.openAtLogin === undefined ? base.openAtLogin : Boolean(savedState.openAtLogin),
-    bubbleEnabled: savedState.bubbleEnabled === undefined ? base.bubbleEnabled : Boolean(savedState.bubbleEnabled),
+    bubbleEnabled: savedState.bubblePreferenceSet ? Boolean(savedState.bubbleEnabled) : base.bubbleEnabled,
+    bubblePreferenceSet: Boolean(savedState.bubblePreferenceSet),
     petScale: clampPetScale(savedState.petScale),
     hideDockIcon: Boolean(savedState.hideDockIcon),
     petWindows: petWindowsState
@@ -174,7 +176,7 @@ function getWindowSizeForPetScale(scale, options = {}) {
 
   return {
     width: Math.max(214, Math.round(petWidth + 64)),
-    height: Math.max(410, Math.round(petHeight + 330))
+    height: Math.max(450, Math.round(petHeight + 350))
   };
 }
 
@@ -204,12 +206,23 @@ function getDefaultBoundsForPet(petId) {
   const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
   const { workArea } = display;
   const index = Math.max(0, currentState.petWindows.findIndex((entry) => entry.petId === petId));
-  const column = index % 3;
-  const row = Math.floor(index / 3);
+  const total = Math.max(1, currentState.petWindows.length);
+
+  return getArrangedBoundsForPet(petId, index, total, workArea);
+}
+
+function getArrangedBoundsForPet(petId, index, total, workArea) {
+  const target = getWindowSizeForPet(petId);
+  const margin = 24;
+  const gap = 14;
+  const columnsThatFit = Math.max(1, Math.floor((workArea.width - margin * 2 + gap) / (target.width + gap)));
+  const columns = Math.max(1, Math.min(total, columnsThatFit));
+  const column = index % columns;
+  const row = Math.floor(index / columns);
 
   return clampBoundsToWorkArea({
-    x: Math.round(workArea.x + workArea.width - target.width - 48 - column * 42),
-    y: Math.round(workArea.y + workArea.height - target.height - 64 - row * 28),
+    x: Math.round(workArea.x + workArea.width - target.width - margin - column * (target.width + gap)),
+    y: Math.round(workArea.y + workArea.height - target.height - margin - row * (target.height + gap)),
     width: target.width,
     height: target.height
   });
@@ -385,6 +398,7 @@ function setAlwaysOnTop(enabled) {
 
 function setBubbleEnabled(enabled) {
   currentState.bubbleEnabled = Boolean(enabled);
+  currentState.bubblePreferenceSet = true;
   writeWindowState();
   refreshTrayMenu();
   broadcastSettings();
@@ -500,6 +514,19 @@ function resetAllPetPositions() {
   }
 }
 
+function arrangePetWindows() {
+  const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
+  const { workArea } = display;
+  const petIds = listActivePetIds();
+  const total = Math.max(1, petIds.length);
+
+  petIds.forEach((petId, index) => {
+    const window = showPetWindow(petId);
+    window.setBounds(getArrangedBoundsForPet(petId, index, total, workArea));
+    writeWindowStateForWindow(window);
+  });
+}
+
 function getSwitchSourceState() {
   const focusedWindow = BrowserWindow.getFocusedWindow();
   const sourceWindow = focusedWindow?.petId ? focusedWindow : Array.from(petWindows.values()).find((window) => {
@@ -581,6 +608,7 @@ function addAllPetsToDesktop() {
     window.setAlwaysOnTop(currentState.alwaysOnTop, "screen-saver");
   }
 
+  arrangePetWindows();
   refreshTrayMenu();
   broadcastSettings();
 }

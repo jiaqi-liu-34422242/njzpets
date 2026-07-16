@@ -54,7 +54,7 @@ const state = {
   shellSettings: {
     alwaysOnTop: true,
     openAtLogin: true,
-    bubbleEnabled: true,
+    bubbleEnabled: false,
     petId: pets[0].id,
     activePetIds: [pets[0].id],
     hideDockIcon: false
