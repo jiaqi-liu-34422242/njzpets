@@ -33,13 +33,5 @@ Desktop.ini
 .vscode/
 .idea/
 
-# Pet assets
-minji/
-hanni/
-daniel/
-haerin/
-hyein/
-
-
 *.zip
 release/
