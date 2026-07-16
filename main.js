@@ -591,6 +591,11 @@ function createTray() {
   tray = new Tray(createTrayIcon());
   tray.setToolTip("NewJeans Pets");
   tray.on("click", () => {
+    if (process.platform === "darwin") {
+      tray.popUpContextMenu();
+      return;
+    }
+
     if (!currentState.petWindows.length) {
       addPetToDesktop(PET_OPTIONS[0].id);
       return;

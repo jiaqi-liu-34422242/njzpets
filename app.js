@@ -479,15 +479,21 @@ function render() {
   renderShellControls();
 }
 
-petButton.addEventListener("click", () => {
+function openControlsMenu(options = {}) {
   if (Date.now() < suppressPetClickUntil) return;
   if (state.companionMode) return;
   window.clearTimeout(controlsHoverTimer);
   state.controlsOpen = true;
   state.controlsHoverOpen = false;
   renderShellControls();
-  cycleBubble(1);
-  activateAction("waving");
+  if (options.playInteraction !== false) {
+    cycleBubble(1);
+    activateAction("waving");
+  }
+}
+
+petButton.addEventListener("click", () => {
+  openControlsMenu();
 });
 
 actionButtons.forEach((button) => {
@@ -623,10 +629,8 @@ bubbleEditorBackdrop.addEventListener("click", () => {
 
 function beginPetDrag(event) {
   if (!window.desktopPetShell || event.button !== 0) return;
-  dragState = { x: event.screenX, y: event.screenY, pointerId: event.pointerId, moved: false };
+  dragState = { x: event.screenX, y: event.screenY, pointerId: event.pointerId, moved: false, started: false };
   petCluster.setPointerCapture(event.pointerId);
-  document.body.classList.add("dragging-pet");
-  window.desktopPetShell.startWindowDrag();
 }
 
 function updatePetDrag(event) {
@@ -635,12 +639,17 @@ function updatePetDrag(event) {
   const deltaY = event.screenY - dragState.y;
   if (Math.abs(deltaX) + Math.abs(deltaY) > 3) {
     dragState.moved = true;
+    if (!dragState.started && window.desktopPetShell) {
+      dragState.started = true;
+      document.body.classList.add("dragging-pet");
+      window.desktopPetShell.startWindowDrag();
+    }
   }
 }
 
 function endPetDrag(event) {
   if (!dragState) return;
-  if (window.desktopPetShell) {
+  if (dragState.started && window.desktopPetShell) {
     window.desktopPetShell.stopWindowDrag();
   }
   if (event?.pointerId !== undefined) {
@@ -661,6 +670,10 @@ petCluster.addEventListener("pointerdown", beginPetDrag);
 petCluster.addEventListener("pointermove", updatePetDrag);
 petCluster.addEventListener("pointerup", endPetDrag);
 petCluster.addEventListener("pointercancel", endPetDrag);
+petCluster.addEventListener("contextmenu", (event) => {
+  event.preventDefault();
+  openControlsMenu({ playInteraction: false });
+});
 
 function setControlsHoverOpen(open) {
   window.clearTimeout(controlsHoverTimer);

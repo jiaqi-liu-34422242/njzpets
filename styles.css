@@ -238,20 +238,26 @@ body.companion-mode .pet-cluster:hover .pet-nameplate {
   background: rgba(255, 255, 255, 0.82);
   border: 1px solid rgba(87, 71, 53, 0.08);
   opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
   transform: translateX(-50%) translateY(10px);
-  transition: opacity 160ms ease, transform 160ms ease;
+  transition: opacity 160ms ease, transform 160ms ease, visibility 0ms linear 160ms;
   -webkit-app-region: no-drag;
 }
 
 body.controls-visible .action-bar {
   opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
   transform: translateX(-50%) translateY(0);
+  transition-delay: 0ms;
 }
 
 body.bubble-editor-open .action-bar,
 body.companion-mode .action-bar,
 body.companion-mode.controls-visible .action-bar {
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
   transform: translateX(-50%) translateY(10px);
 }
